@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hello · Turso + Rust</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --border: #1e1e2e;
+      --accent: #4fffb0;
+      --accent2: #7c6aff;
+      --text: #e8e8f0;
+      --muted: #5a5a7a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem;
+      overflow: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 1rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem 3.5rem;
+      text-align: center;
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 0 60px rgba(76, 255, 176, 0.04), 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(76,255,176,0.15), transparent 50%, rgba(124,106,255,0.1));
+      pointer-events: none;
+    }
+
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+    }
+
+    .message {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2rem;
+      min-height: 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .message.loading {
+      -webkit-text-fill-color: var(--muted);
+      background: none;
+      font-size: 1rem;
+      font-family: 'Space Mono', monospace;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 1.5rem 0;
+    }
+
+    .stack {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      background: var(--bg);
+    }
+
+    .tag.rust   { border-color: #ff7043; color: #ff7043; }
+    .tag.turso  { border-color: var(--accent); color: var(--accent); }
+    .tag.html   { border-color: var(--accent2); color: var(--accent2); }
+
+    .btn {
+      margin-top: 2rem;
+      display: inline-block;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 0 20px rgba(76, 255, 176, 0.3);
+    }
+
+    .footer {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="badge">
+    <span class="dot"></span>
+    server running · localhost:8080
+  </div>
+
+  <div class="card">
+    <p class="label">message from turso db</p>
+    <div class="message loading" id="msg">fetching...</div>
+    <hr class="divider">
+    <div class="stack">
+      <span class="tag rust">Rust</span>
+      <span class="tag turso">Turso DB</span>
+      <span class="tag html">HTML / CSS</span>
+      <span class="tag">No Framework</span>
+    </div>
+    <button class="btn" onclick="fetchMessage()">↺ Refresh</button>
+  </div>
+
+  <p class="footer">GET /api/hello → Turso → Rust → You</p>
+
+  <script>
+    async function fetchMessage() {
+      const el = document.getElementById('msg');
+      el.className = 'message loading';
+      el.textContent = 'fetching...';
+      try {
+        const res = await fetch('/api/hello');
+        const data = await res.json();
+        el.className = 'message';
+        el.textContent = data.message;
+      } catch (e) {
+        el.className = 'message loading';
+        el.textContent = 'connection error';
+      }
+    }
+    fetchMessage();
+  </script>
+
+</body>
+</html>
